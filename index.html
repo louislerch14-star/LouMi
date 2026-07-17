@@ -3,93 +3,128 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LouiMi - Unsere Zentrale</title>
+    <title>LouiMi | Unsere Zentrale</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
+        :root {
+            --primary: #6c5ce7;
+            --accent: #00b894;
+            --bg: #f8f9fa;
+            --text: #2d3436;
+        }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f0f2f5;
-            text-align: center;
-            color: #333;
+            font-family: 'Inter', -apple-system, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
             margin: 0;
             padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
         header {
-            background: #6c5ce7;
+            background: linear-gradient(135deg, var(--primary), #a29bfe);
             color: white;
-            padding: 20px;
-            border-radius: 15px;
-            margin-bottom: 20px;
-        }
-
-        section {
-            background: white;
-            margin: 20px auto;
-            padding: 20px;
+            padding: 30px;
+            border-radius: 25px;
+            width: 100%;
             max-width: 600px;
-            border-radius: 15px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            text-align: center;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
         }
 
-        .bus-button {
-            display: inline-block;
-            background-color: #00b894;
+        .card {
+            background: white;
+            padding: 25px;
+            margin: 15px 0;
+            width: 100%;
+            max-width: 600px;
+            border-radius: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+
+        button {
+            background: var(--primary);
             color: white;
-            padding: 15px 30px;
-            text-decoration: none;
+            border: none;
+            padding: 10px 20px;
             border-radius: 10px;
+            cursor: pointer;
             font-weight: bold;
-            margin-top: 10px;
             transition: 0.3s;
         }
 
-        .bus-button:hover {
-            background-color: #009475;
-            transform: scale(1.05);
-        }
+        button:hover { opacity: 0.9; transform: translateY(-2px); }
 
-        ul {
-            list-style-type: none;
-            padding: 0;
-        }
+        .bus-active { background: var(--accent); }
 
-        li {
-            background: #f9f9f9;
-            margin: 5px 0;
+        input {
             padding: 10px;
-            border-radius: 5px;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+            width: 70%;
+        }
+
+        ul { list-style: none; padding: 0; margin-top: 15px; }
+        li { 
+            background: #f1f2f6; 
+            padding: 10px; 
+            margin: 5px 0; 
+            border-radius: 8px; 
+            display: flex; 
+            justify-content: space-between; 
         }
     </style>
 </head>
 <body>
 
     <header>
-        <h1>LouiMi</h1>
-        <p>Der place to be für Louis & Mia 💀😉</p>
+        <h1>LouiMi 💀</h1>
+        <p>Unsere gemeinsame Base</p>
     </header>
 
-    <main>
-        <section id="todos">
-            <h2>ToDo Liste</h2>
-            <ul id="todo-list">
-                <li>Zusammen chillen 🎮</li>
-                <li>Geile Videos schneiden 🎬</li>
-            </ul>
-        </section>
+    <div class="card">
+        <h2>🚌 Bus-Status</h2>
+        <p id="bus-status">Lade Status...</p>
+        <button id="bus-btn" onclick="toggleBus()">Bus gebucht! ✅</button>
+    </div>
 
-        <section id="media">
-            <h2>Galerie</h2>
-            <p>Hier kommen bald unsere witzigen Clips hin! 📸</p>
-        </section>
+    <div class="card">
+        <h2>📝 ToDos</h2>
+        <input type="text" id="todo-input" placeholder="Neue Aufgabe...">
+        <button onclick="addTodo()">+</button>
+        <ul id="todo-list"></ul>
+    </div>
 
-        <section id="bus">
-            <h2>Mia's Bus-Service</h2>
-            <p>Immer safe ankommen:</p>
-            <a href="https://www.moobilplus.de" target="_blank" class="bus-button">
-                Hier Bus buchen, Digger! 🚌
-            </a>
-        </section>
-    </main>
+    <script>
+        const supabase = supabase.createClient('https://hrahghiqzmabceupyjzo.supabase.co', 'sb_publishable_oUO-22W29APNbeJOmW2jIw_YsyiHyW7');
 
+        async function fetchAll() {
+            const { data: bus } = await supabase.from('bus_status').select('*').eq('id', 1).single();
+            document.getElementById('bus-status').innerText = bus?.status || "Nicht gebucht";
+            
+            const { data: todos } = await supabase.from('todos').select('*');
+            const list = document.getElementById('todo-list');
+            list.innerHTML = todos.map(t => `<li>${t.task}</li>`).join('');
+        }
+
+        async function toggleBus() {
+            await supabase.from('bus_status').update({ status: 'Gebucht! 🚌' }).eq('id', 1);
+            fetchAll();
+        }
+
+        async function addTodo() {
+            const input = document.getElementById('todo-input');
+            if(!input.value) return;
+            await supabase.from('todos').insert([{ task: input.value }]);
+            input.value = '';
+            fetchAll();
+        }
+
+        fetchAll();
+    </script>
 </body>
 </html>
