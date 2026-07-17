@@ -1,24 +1,15 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-      <!-- Standard Favicon -->
-<link rel="icon" type="image/x-icon" href="loumi.png">
-<!-- Für moderne Browser -->
-<link rel="icon" type="image/png" sizes="32x32" href="loumi.png">
-<link rel="icon" type="image/png" sizes="16x16" href="loumi.png">
-<!-- Für Apple Touch Icons (optional, aber gut) -->
-<link rel="apple-touch-icon" sizes="180x180" href="loumi.png">
+    <link rel="icon" type="image/x-icon" href="loumi.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="loumi.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="loumi.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="loumi.png">
     <meta charset="UTF-8">
-    <title>LouiMi | Dark Mint</title>
+    <title>LouMi | Die Webseite</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { 
-            --bg-dark: #121212; 
-            --card-bg: #1e1e1e; 
-            --mint: #00b894; 
-            --mint-light: #55efc4; 
-            --text: #e0e0e0; 
-        }
+        :root { --bg-dark: #121212; --card-bg: #1e1e1e; --mint: #00b894; --mint-light: #55efc4; --text: #e0e0e0; }
         body { background-color: var(--bg-dark); color: var(--text); font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 20px; }
         .card { background: var(--card-bg); padding: 25px; border-radius: 20px; box-shadow: 0 8px 16px rgba(0,0,0,0.3); width: 100%; max-width: 500px; margin-bottom: 20px; border: 1px solid #333; }
         h1 { color: var(--mint); text-align: center; margin-top: 0; }
@@ -28,12 +19,13 @@
         input { background: #333; border: 1px solid #444; color: white; padding: 12px; border-radius: 10px; width: 88%; margin-bottom: 10px; }
         .media-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
         img { width: 100%; border-radius: 10px; border: 2px solid var(--mint); }
+        ul { padding: 0; list-style: none; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <h1>LouiMi 🌊</h1>
+    <h1>LouMi </h1>
     <h3 id="bus-status">Bus: Lade...</h3>
     <button onclick="toggleBus()">Bus-Status ändern 🚌</button>
 </div>
@@ -43,6 +35,14 @@
     <input type="text" id="todo-input" placeholder="Neue Aufgabe...">
     <button onclick="addTodo()">Aufgabe hinzufügen</button>
     <ul id="todo-list"></ul>
+</div>
+
+<div class="card">
+    <h3>🎵 LouMi Vibes</h3>
+    <input type="text" id="song-title" placeholder="Song Name">
+    <input type="text" id="song-url" placeholder="YouTube URL">
+    <button onclick="addSong()">Song hinzufügen</button>
+    <ul id="song-list"></ul>
 </div>
 
 <div class="card">
@@ -69,16 +69,34 @@
     }
 
     async function load() {
+        // Bus & ToDos
         const { data: b } = await supabaseClient.from('bus_status').select('status').eq('id', 1).single();
         document.getElementById('bus-status').innerText = `Bus: ${b.status}`;
-        
         const { data: t } = await supabaseClient.from('todos').select('*');
-        document.getElementById('todo-list').innerHTML = t.map(i => `<li style="list-style:none; padding:10px; border-bottom:1px solid #333;">${i.task}</li>`).join('');
+        document.getElementById('todo-list').innerHTML = t.map(i => `<li style="padding:10px; border-bottom:1px solid #333;">${i.task}</li>`).join('');
         
-        const { data: files } = await supabaseClient.storage.from('media').list();
-        document.getElementById('media-grid').innerHTML = files.map(f => `
-            <img src="https://hrahghiqzmabceupyjzo.supabase.co/storage/v1/object/public/media/${f.name}">
+        // Songs
+        const { data: songs } = await supabaseClient.from('songs').select('*');
+        document.getElementById('song-list').innerHTML = songs.map(s => `
+            <li style="margin-bottom:15px; border-bottom:1px solid #333; padding-bottom:10px;">
+                <a href="${s.url}" target="_blank" style="color:var(--mint); text-decoration:none;">${s.title}</a>
+                <iframe width="100%" height="150" src="${s.url.replace('watch?v=', 'embed/')}" frameborder="0" allowfullscreen style="margin-top:5px; border-radius:10px;"></iframe>
+            </li>
         `).join('');
+
+        // Galerie
+        const { data: files } = await supabaseClient.storage.from('media').list();
+        document.getElementById('media-grid').innerHTML = files.map(f => `<img src="https://hrahghiqzmabceupyjzo.supabase.co/storage/v1/object/public/media/${f.name}">`).join('');
+    }
+
+    async function addSong() {
+        const title = document.getElementById('song-title').value;
+        const url = document.getElementById('song-url').value;
+        if(!title || !url) return;
+        await supabaseClient.from('songs').insert([{ title, url }]);
+        document.getElementById('song-title').value = '';
+        document.getElementById('song-url').value = '';
+        load();
     }
 
     async function uploadMedia() {
@@ -89,8 +107,7 @@
     }
 
     async function toggleBus() {
-        const current = document.getElementById('bus-status').innerText;
-        const newStatus = current.includes('Nicht') ? 'Gebucht! ✅' : 'Nicht gebucht';
+        const newStatus = document.getElementById('bus-status').innerText.includes('Nicht') ? 'Gebucht! ✅' : 'Nicht gebucht';
         await supabaseClient.from('bus_status').update({ status: newStatus }).eq('id', 1);
         load();
     }
