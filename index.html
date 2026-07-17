@@ -5,28 +5,29 @@
     <title>LouiMi | Zentrale</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --mint: #00b894; --mint-dark: #009475; --bg: #f0f7f6; }
+        :root { --mint: #00b894; --bg: #f0f7f6; }
         body { background: linear-gradient(135deg, var(--bg), #d1e7e4); font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 20px; color: #2d3436; }
         .card { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.08); width: 100%; max-width: 500px; margin-bottom: 20px; }
-        h1 { color: var(--mint); text-align: center; margin-top: 0; }
-        button { background: var(--mint); color: white; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; transition: 0.3s; font-weight: bold; }
-        button:hover { background: var(--mint-dark); }
-        input { padding: 12px; border-radius: 10px; border: 1px solid #ddd; width: 70%; margin-right: 5px; }
-        ul { list-style: none; padding: 0; }
-        li { background: #f9f9f9; padding: 12px; border-radius: 10px; margin: 8px 0; border-left: 4px solid var(--mint); }
+        h1 { color: var(--mint); text-align: center; }
+        button { background: var(--mint); color: white; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-weight: bold; }
+        input { padding: 12px; border-radius: 10px; border: 1px solid #ddd; width: 90%; margin-bottom: 10px; }
     </style>
 </head>
 <body>
 
-    <div class="card">
-        <h1>LouiMi 🌊</h1>
-        <div style="text-align: center;">
-            <h3 id="bus-status">Status lädt...</h3>
-            <button onclick="toggleBus()">Bus-Status ändern 🚌</button>
-        </div>
+    <!-- Login Card -->
+    <div id="login-card" class="card">
+        <h1>LouiMi Login 🔒</h1>
+        <input type="email" id="email" placeholder="E-Mail">
+        <input type="password" id="password" placeholder="Passwort">
+        <button onclick="login()">Einloggen</button>
     </div>
 
-    <div class="card">
+    <!-- Dashboard (versteckt) -->
+    <div id="dashboard" class="card" style="display:none;">
+        <h1>LouiMi 🌊</h1>
+        <h3 id="bus-status">Status lädt...</h3>
+        <button onclick="toggleBus()">Bus-Status ändern 🚌</button>
         <h3>📝 ToDos</h3>
         <input type="text" id="todo-input" placeholder="Neue Aufgabe...">
         <button onclick="addTodo()">+</button>
@@ -34,40 +35,47 @@
     </div>
 
     <script>
-    // Hier ist deine Config
-    const SUPABASE_URL = "https://hrahghiqzmabceupyjzo.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhyYWhnaGlxem1hYmNldXB5anpvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQyNDc0NjksImV4cCI6MjA5OTgyMzQ2OX0.FhwGpOEJx1Xf3BzE3X1YjhBge406SQ_RkMXGgTnoTe8";
-    
-    // Das hier ist dein Client!
-    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const supabaseClient = supabase.createClient(
+            "https://hrahghiqzmabceupyjzo.supabase.co", 
+            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhyYWhnaGlxem1hYmNldXB5anpvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQyNDc0NjksImV4cCI6MjA5OTgyMzQ2OX0.FhwGpOEJx1Xf3BzE3X1YjhBge406SQ_RkMXGgTnoTe8"
+        );
 
-    async function load() {
-        // HIER: supabase -> supabaseClient
-        const { data: b } = await supabaseClient.from('bus_status').select('*').eq('id', 1).single();
-        document.getElementById('bus-status').innerText = `Bus: ${b ? b.status : 'Nicht gefunden'}`;
-        
-        const { data: t } = await supabaseClient.from('todos').select('*');
-        document.getElementById('todo-list').innerHTML = t.map(i => `<li>${i.task}</li>`).join('');
-    }
+        async function login() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
 
-    async function toggleBus() {
-        const current = document.getElementById('bus-status').innerText;
-        const newStatus = current.includes('Nicht') ? 'Gebucht! ✅' : 'Nicht gebucht';
-        // HIER: supabase -> supabaseClient
-        await supabaseClient.from('bus_status').update({ status: newStatus }).eq('id', 1);
-        load();
-    }
+            if (error) {
+                alert("Login fehlgeschlagen: " + error.message);
+            } else {
+                document.getElementById('login-card').style.display = 'none';
+                document.getElementById('dashboard').style.display = 'block';
+                load();
+            }
+        }
 
-    async function addTodo() {
-        const input = document.getElementById('todo-input');
-        if(!input.value) return;
-        // HIER: supabase -> supabaseClient
-        await supabaseClient.from('todos').insert([{ task: input.value }]);
-        input.value = '';
-        load();
-    }
+        async function load() {
+            const { data: b } = await supabaseClient.from('bus_status').select('*').eq('id', 1).single();
+            document.getElementById('bus-status').innerText = `Bus: ${b.status}`;
+            
+            const { data: t } = await supabaseClient.from('todos').select('*');
+            document.getElementById('todo-list').innerHTML = t ? t.map(i => `<li>${i.task}</li>`).join('') : '';
+        }
 
-    load();
+        async function toggleBus() {
+            const current = document.getElementById('bus-status').innerText;
+            const newStatus = current.includes('Nicht') ? 'Gebucht! ✅' : 'Nicht gebucht';
+            await supabaseClient.from('bus_status').update({ status: newStatus }).eq('id', 1);
+            load();
+        }
+
+        async function addTodo() {
+            const input = document.getElementById('todo-input');
+            if(!input.value) return;
+            await supabaseClient.from('todos').insert([{ task: input.value }]);
+            input.value = '';
+            load();
+        }
     </script>
 </body>
 </html>
