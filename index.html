@@ -34,33 +34,40 @@
     </div>
 
     <script>
-        const SUPABASE_URL = "https://hrahghiqzmabceupyjzo.supabase.co";
-        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhyYWhnaGlxem1hYmNldXB5anpvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQyNDc0NjksImV4cCI6MjA5OTgyMzQ2OX0.FhwGpOEJx1Xf3BzE3X1YjhBge406SQ_RkMXGgTnoTe8";
-        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    // Hier ist deine Config
+    const SUPABASE_URL = "https://hrahghiqzmabceupyjzo.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhyYWhnaGlxem1hYmNldXB5anpvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQyNDc0NjksImV4cCI6MjA5OTgyMzQ2OX0.FhwGpOEJx1Xf3BzE3X1YjhBge406SQ_RkMXGgTnoTe8";
+    
+    // Das hier ist dein Client!
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        async function load() {
-            const { data: b } = await supabase.from('bus_status').select('*').eq('id', 1).single();
-            document.getElementById('bus-status').innerText = `Bus: ${b.status}`;
-            const { data: t } = await supabase.from('todos').select('*');
-            document.getElementById('todo-list').innerHTML = t.map(i => `<li>${i.task}</li>`).join('');
-        }
+    async function load() {
+        // HIER: supabase -> supabaseClient
+        const { data: b } = await supabaseClient.from('bus_status').select('*').eq('id', 1).single();
+        document.getElementById('bus-status').innerText = `Bus: ${b ? b.status : 'Nicht gefunden'}`;
+        
+        const { data: t } = await supabaseClient.from('todos').select('*');
+        document.getElementById('todo-list').innerHTML = t.map(i => `<li>${i.task}</li>`).join('');
+    }
 
-        async function toggleBus() {
-            const current = document.getElementById('bus-status').innerText;
-            const newStatus = current.includes('Nicht') ? 'Gebucht! ✅' : 'Nicht gebucht';
-            await supabase.from('bus_status').update({ status: newStatus }).eq('id', 1);
-            load();
-        }
-
-        async function addTodo() {
-            const input = document.getElementById('todo-input');
-            if(!input.value) return;
-            await supabase.from('todos').insert([{ task: input.value }]);
-            input.value = '';
-            load();
-        }
-
+    async function toggleBus() {
+        const current = document.getElementById('bus-status').innerText;
+        const newStatus = current.includes('Nicht') ? 'Gebucht! ✅' : 'Nicht gebucht';
+        // HIER: supabase -> supabaseClient
+        await supabaseClient.from('bus_status').update({ status: newStatus }).eq('id', 1);
         load();
+    }
+
+    async function addTodo() {
+        const input = document.getElementById('todo-input');
+        if(!input.value) return;
+        // HIER: supabase -> supabaseClient
+        await supabaseClient.from('todos').insert([{ task: input.value }]);
+        input.value = '';
+        load();
+    }
+
+    load();
     </script>
 </body>
 </html>
