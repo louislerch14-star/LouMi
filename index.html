@@ -2,80 +2,101 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>LouiMi | Zentrale</title>
+    <title>LouiMi | Dark Mint</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --mint: #00b894; --bg: #f0f7f6; }
-        body { background: linear-gradient(135deg, var(--bg), #d1e7e4); font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 20px; color: #2d3436; }
-        .card { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.08); width: 100%; max-width: 500px; margin-bottom: 20px; }
-        h1 { color: var(--mint); text-align: center; }
-        button { background: var(--mint); color: white; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-weight: bold; }
-        input { padding: 12px; border-radius: 10px; border: 1px solid #ddd; width: 90%; margin-bottom: 10px; }
+        :root { 
+            --bg-dark: #121212; 
+            --card-bg: #1e1e1e; 
+            --mint: #00b894; 
+            --mint-light: #55efc4; 
+            --text: #e0e0e0; 
+        }
+        body { background-color: var(--bg-dark); color: var(--text); font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 20px; }
+        .card { background: var(--card-bg); padding: 25px; border-radius: 20px; box-shadow: 0 8px 16px rgba(0,0,0,0.3); width: 100%; max-width: 500px; margin-bottom: 20px; border: 1px solid #333; }
+        h1 { color: var(--mint); text-align: center; margin-top: 0; }
+        h3 { color: var(--mint-light); }
+        button { background: var(--mint); color: #000; border: none; padding: 12px; border-radius: 10px; cursor: pointer; width: 100%; font-weight: bold; transition: 0.3s; }
+        button:hover { background: var(--mint-light); transform: scale(1.02); }
+        input { background: #333; border: 1px solid #444; color: white; padding: 12px; border-radius: 10px; width: 88%; margin-bottom: 10px; }
+        .media-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
+        img { width: 100%; border-radius: 10px; border: 2px solid var(--mint); }
     </style>
 </head>
 <body>
 
-    <!-- Login Card -->
-    <div id="login-card" class="card">
-        <h1>LouiMi Login 🔒</h1>
-        <input type="email" id="email" placeholder="E-Mail">
-        <input type="password" id="password" placeholder="Passwort">
-        <button onclick="login()">Einloggen</button>
-    </div>
+<div class="card">
+    <h1>LouiMi 🌊</h1>
+    <h3 id="bus-status">Bus: Lade...</h3>
+    <button onclick="toggleBus()">Bus-Status ändern 🚌</button>
+</div>
 
-    <!-- Dashboard (versteckt) -->
-    <div id="dashboard" class="card" style="display:none;">
-        <h1>LouiMi 🌊</h1>
-        <h3 id="bus-status">Status lädt...</h3>
-        <button onclick="toggleBus()">Bus-Status ändern 🚌</button>
-        <h3>📝 ToDos</h3>
-        <input type="text" id="todo-input" placeholder="Neue Aufgabe...">
-        <button onclick="addTodo()">+</button>
-        <ul id="todo-list"></ul>
-    </div>
+<div class="card">
+    <h3>📝 ToDos</h3>
+    <input type="text" id="todo-input" placeholder="Neue Aufgabe...">
+    <button onclick="addTodo()">Aufgabe hinzufügen</button>
+    <ul id="todo-list"></ul>
+</div>
 
-    <script>
-        const supabaseClient = supabase.createClient(
-            "https://hrahghiqzmabceupyjzo.supabase.co", 
-            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhyYWhnaGlxem1hYmNldXB5anpvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQyNDc0NjksImV4cCI6MjA5OTgyMzQ2OX0.FhwGpOEJx1Xf3BzE3X1YjhBge406SQ_RkMXGgTnoTe8"
-        );
+<div class="card">
+    <h3>Galerie 📸</h3>
+    <input type="file" id="file-input">
+    <button onclick="uploadMedia()">Hochladen</button>
+    <div id="media-grid" class="media-grid"></div>
+</div>
 
-        async function login() {
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+<script>
+    const supabaseClient = supabase.createClient(
+        "https://hrahghiqzmabceupyjzo.supabase.co", 
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhyYWhnaGlxem1hYmNldXB5anpvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQyNDc0NjksImV4cCI6MjA5OTgyMzQ2OX0.FhwGpOEJx1Xf3BzE3X1YjhBge406SQ_RkMXGgTnoTe8"
+    );
 
-            if (error) {
-                alert("Login fehlgeschlagen: " + error.message);
-            } else {
-                document.getElementById('login-card').style.display = 'none';
-                document.getElementById('dashboard').style.display = 'block';
-                load();
-            }
+    async function init() {
+        const today = new Date().toDateString();
+        const lastVisit = localStorage.getItem('last-visit');
+        if(lastVisit !== today) {
+            await supabaseClient.from('bus_status').update({ status: 'Nicht gebucht' }).eq('id', 1);
+            localStorage.setItem('last-visit', today);
         }
+        load();
+    }
 
-        async function load() {
-            const { data: b } = await supabaseClient.from('bus_status').select('*').eq('id', 1).single();
-            document.getElementById('bus-status').innerText = `Bus: ${b.status}`;
-            
-            const { data: t } = await supabaseClient.from('todos').select('*');
-            document.getElementById('todo-list').innerHTML = t ? t.map(i => `<li>${i.task}</li>`).join('') : '';
-        }
+    async function load() {
+        const { data: b } = await supabaseClient.from('bus_status').select('status').eq('id', 1).single();
+        document.getElementById('bus-status').innerText = `Bus: ${b.status}`;
+        
+        const { data: t } = await supabaseClient.from('todos').select('*');
+        document.getElementById('todo-list').innerHTML = t.map(i => `<li style="list-style:none; padding:10px; border-bottom:1px solid #333;">${i.task}</li>`).join('');
+        
+        const { data: files } = await supabaseClient.storage.from('media').list();
+        document.getElementById('media-grid').innerHTML = files.map(f => `
+            <img src="https://hrahghiqzmabceupyjzo.supabase.co/storage/v1/object/public/media/${f.name}">
+        `).join('');
+    }
 
-        async function toggleBus() {
-            const current = document.getElementById('bus-status').innerText;
-            const newStatus = current.includes('Nicht') ? 'Gebucht! ✅' : 'Nicht gebucht';
-            await supabaseClient.from('bus_status').update({ status: newStatus }).eq('id', 1);
-            load();
-        }
+    async function uploadMedia() {
+        const file = document.getElementById('file-input').files[0];
+        if(!file) return;
+        await supabaseClient.storage.from('media').upload(Date.now() + "_" + file.name, file);
+        load();
+    }
 
-        async function addTodo() {
-            const input = document.getElementById('todo-input');
-            if(!input.value) return;
-            await supabaseClient.from('todos').insert([{ task: input.value }]);
-            input.value = '';
-            load();
-        }
-    </script>
+    async function toggleBus() {
+        const current = document.getElementById('bus-status').innerText;
+        const newStatus = current.includes('Nicht') ? 'Gebucht! ✅' : 'Nicht gebucht';
+        await supabaseClient.from('bus_status').update({ status: newStatus }).eq('id', 1);
+        load();
+    }
+
+    async function addTodo() {
+        const input = document.getElementById('todo-input');
+        if(!input.value) return;
+        await supabaseClient.from('todos').insert([{ task: input.value }]);
+        input.value = '';
+        load();
+    }
+
+    init();
+</script>
 </body>
 </html>
