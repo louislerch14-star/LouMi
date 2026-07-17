@@ -69,22 +69,20 @@
     }
 
     async function load() {
-        // Bus & ToDos
         const { data: b } = await supabaseClient.from('bus_status').select('status').eq('id', 1).single();
         document.getElementById('bus-status').innerText = `Bus: ${b.status}`;
+        
         const { data: t } = await supabaseClient.from('todos').select('*');
         document.getElementById('todo-list').innerHTML = t.map(i => `<li style="padding:10px; border-bottom:1px solid #333;">${i.task}</li>`).join('');
         
-        // Songs
         const { data: songs } = await supabaseClient.from('songs').select('*');
         document.getElementById('song-list').innerHTML = songs.map(s => `
             <li style="margin-bottom:15px; border-bottom:1px solid #333; padding-bottom:10px;">
-                <a href="${s.url}" target="_blank" style="color:var(--mint); text-decoration:none;">${s.title}</a>
-                <iframe width="100%" height="150" src="${s.url.replace('watch?v=', 'embed/')}" frameborder="0" allowfullscreen style="margin-top:5px; border-radius:10px;"></iframe>
+                <a href="${s.url.replace('embed/', 'watch?v=')}" target="_blank" style="color:var(--mint); text-decoration:none;">${s.title}</a>
+                <iframe width="100%" height="200" src="${s.url}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="margin-top:10px; border-radius:10px; border: 1px solid #333;"></iframe>
             </li>
         `).join('');
 
-        // Galerie
         const { data: files } = await supabaseClient.storage.from('media').list();
         document.getElementById('media-grid').innerHTML = files.map(f => `<img src="https://hrahghiqzmabceupyjzo.supabase.co/storage/v1/object/public/media/${f.name}">`).join('');
     }
@@ -93,10 +91,20 @@
         const title = document.getElementById('song-title').value;
         const url = document.getElementById('song-url').value;
         if(!title || !url) return;
-        await supabaseClient.from('songs').insert([{ title, url }]);
-        document.getElementById('song-title').value = '';
-        document.getElementById('song-url').value = '';
-        load();
+        
+        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+        const match = url.match(regExp);
+        const videoId = (match && match[2].length === 11) ? match[2] : null;
+
+        if (videoId) {
+            const embedUrl = `https://www.youtube.com/embed/${videoId}`;
+            await supabaseClient.from('songs').insert([{ title, url: embedUrl }]);
+            document.getElementById('song-title').value = '';
+            document.getElementById('song-url').value = '';
+            load();
+        } else {
+            alert("Digga, das ist keine gültige YouTube-URL!");
+        }
     }
 
     async function uploadMedia() {
