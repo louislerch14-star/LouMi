@@ -1,31 +1,172 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
+    <meta charset="UTF-8">
+    <!-- Extrem wichtig für Handy-Design, sonst wird alles winzig! -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>LouMi | Die Webseite</title>
+    
+    <!-- Favicons -->
     <link rel="icon" type="image/x-icon" href="loumi.png">
     <link rel="icon" type="image/png" sizes="32x32" href="loumi.png">
     <link rel="icon" type="image/png" sizes="16x16" href="loumi.png">
     <link rel="apple-touch-icon" sizes="180x180" href="loumi.png">
-    <meta charset="UTF-8">
-    <title>LouMi | Die Webseite</title>
+    
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
     <style>
-        :root { --bg-dark: #121212; --card-bg: #1e1e1e; --mint: #00b894; --mint-light: #55efc4; --text: #e0e0e0; }
-        body { background-color: var(--bg-dark); color: var(--text); font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 20px; }
-        .card { background: var(--card-bg); padding: 25px; border-radius: 20px; box-shadow: 0 8px 16px rgba(0,0,0,0.3); width: 100%; max-width: 500px; margin-bottom: 20px; border: 1px solid #333; }
-        h1 { color: var(--mint); text-align: center; margin-top: 0; }
-        h3 { color: var(--mint-light); }
-        button { background: var(--mint); color: #000; border: none; padding: 12px; border-radius: 10px; cursor: pointer; width: 100%; font-weight: bold; transition: 0.3s; }
-        button:hover { background: var(--mint-light); transform: scale(1.02); }
-        input { background: #333; border: 1px solid #444; color: white; padding: 12px; border-radius: 10px; width: 88%; margin-bottom: 10px; }
-        .media-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
-        img { width: 100%; border-radius: 10px; border: 2px solid var(--mint); }
-        ul { padding: 0; list-style: none; }
+        /* Globaler Reset für perfektes Handy-Layout */
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+            -webkit-tap-highlight-color: transparent; /* Verhindert blauen Kasten beim Antippen auf iOS */
+        }
+
+        :root { 
+            --bg-dark: #121212; 
+            --card-bg: #1e1e1e; 
+            --mint: #00b894; 
+            --mint-light: #55efc4; 
+            --text: #e0e0e0; 
+        }
+
+        body { 
+            background-color: var(--bg-dark); 
+            color: var(--text); 
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            min-height: 100vh; 
+            padding: 15px; 
+        }
+
+        /* Die Cards passen sich jetzt perfekt an jede Bildschirmgröße an */
+        .card { 
+            background: var(--card-bg); 
+            padding: 20px; 
+            border-radius: 20px; 
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3); 
+            width: 100%; 
+            max-width: 500px; 
+            margin-bottom: 20px; 
+            border: 1px solid #333; 
+        }
+
+        h1 { 
+            color: var(--mint); 
+            text-align: center; 
+            margin-bottom: 15px; 
+            font-size: 1.8rem;
+        }
+
+        h3 { 
+            color: var(--mint-light); 
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+
+        /* Größere Klickfläche für Smartphone-Finger */
+        button { 
+            background: var(--mint); 
+            color: #000; 
+            border: none; 
+            padding: 14px; 
+            border-radius: 12px; 
+            cursor: pointer; 
+            width: 100%; 
+            font-weight: bold; 
+            font-size: 1rem;
+            transition: 0.2s ease; 
+        }
+
+        button:active { 
+            transform: scale(0.98); /* Kleines Feedback beim Tippen auf dem Handy */
+        }
+
+        /* Inputs füllen jetzt dank box-sizing exakt 100% der Card aus */
+        input { 
+            background: #333; 
+            border: 1px solid #444; 
+            color: white; 
+            padding: 14px; 
+            border-radius: 12px; 
+            width: 100%; 
+            margin-bottom: 12px; 
+            font-size: 1rem;
+            outline: none;
+        }
+        
+        input:focus {
+            border-color: var(--mint);
+        }
+
+        /* Listen-Styling optimiert für Mobile */
+        ul { 
+            list-style: none; 
+            margin-top: 10px;
+        }
+
+        #todo-list li {
+            padding: 12px; 
+            border-bottom: 1px solid #333;
+            font-size: 1.05rem;
+        }
+
+        #song-list li {
+            margin-bottom: 20px; 
+            border-bottom: 1px solid #333; 
+            padding-bottom: 15px;
+        }
+
+        #song-list a {
+            color: var(--mint); 
+            text-decoration: none;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 8px;
+            font-size: 1.1rem;
+        }
+
+        /* YouTube-Iframe optimiert für Touch-Bedienung */
+        iframe {
+            margin-top: 8px; 
+            border-radius: 12px; 
+            border: 1px solid #333;
+            display: block;
+        }
+
+        /* Galerie-Raster: 2 Spalten auf dem Handy, skaliert sauber mit */
+        .media-grid { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 12px; 
+            margin-top: 15px; 
+        }
+
+        img { 
+            width: 100%; 
+            height: auto;
+            aspect-ratio: 1 / 1; /* Macht die Galerie-Bilder quadratisch und clean */
+            object-fit: cover;
+            border-radius: 12px; 
+            border: 2px solid var(--mint); 
+        }
+
+        /* Datei-Upload Button Styling fürs Handy verschönern */
+        input[type="file"] {
+            background: transparent;
+            border: none;
+            padding: 10px 0;
+            color: var(--text);
+        }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <h1>LouMi </h1>
+    <h1>LouMi 🌊</h1>
     <h3 id="bus-status">Bus: Lade...</h3>
     <button onclick="toggleBus()">Bus-Status ändern 🚌</button>
 </div>
@@ -69,20 +210,23 @@
     }
 
     async function load() {
+        // Bus & ToDos
         const { data: b } = await supabaseClient.from('bus_status').select('status').eq('id', 1).single();
         document.getElementById('bus-status').innerText = `Bus: ${b.status}`;
         
         const { data: t } = await supabaseClient.from('todos').select('*');
-        document.getElementById('todo-list').innerHTML = t.map(i => `<li style="padding:10px; border-bottom:1px solid #333;">${i.task}</li>`).join('');
+        document.getElementById('todo-list').innerHTML = t.map(i => `<li>${i.task}</li>`).join('');
         
+        // Songs
         const { data: songs } = await supabaseClient.from('songs').select('*');
         document.getElementById('song-list').innerHTML = songs.map(s => `
-            <li style="margin-bottom:15px; border-bottom:1px solid #333; padding-bottom:10px;">
-                <a href="${s.url.replace('embed/', 'watch?v=')}" target="_blank" style="color:var(--mint); text-decoration:none;">${s.title}</a>
-                <iframe width="100%" height="200" src="${s.url}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="margin-top:10px; border-radius:10px; border: 1px solid #333;"></iframe>
+            <li>
+                <a href="${s.url.replace('embed/', 'watch?v=')}" target="_blank">${s.title}</a>
+                <iframe width="100%" height="200" src="${s.url}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
             </li>
         `).join('');
 
+        // Galerie
         const { data: files } = await supabaseClient.storage.from('media').list();
         document.getElementById('media-grid').innerHTML = files.map(f => `<img src="https://hrahghiqzmabceupyjzo.supabase.co/storage/v1/object/public/media/${f.name}">`).join('');
     }
